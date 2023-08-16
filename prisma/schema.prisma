@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt   DateTime
+}
+
+model Pengguna {
+  id       String @id @default(uuid())
+  nama     String
+  email    String
+  password String
+  role     String
+
+  @@map("pengguna")
+}
+
+model Vendor {
+  id        String   @id @default(uuid())
+  nama      String
+  email     String
+  jl        String
+  kelurahan String
+  kecamatan String
+  kota      String
+  propinsi  String
+  noTelp    String
+  Produk    Produk[]
+  purchasing Purchasing[]
+
+  @@map("vendor")
+}
+
+model Produk {
+  id        String @id @default(uuid())
+  nama      String
+  kemasan   String
+  deskripsi String
+  harga     Int
+  vendorId  String
+  vendor    Vendor @relation(fields: [vendorId], references: [id])
+  transaksi Transaksi[]
+  produk Purchasing[]
+
+  @@map("produk")
+}
+
+model Pembeli {
+  id     String  @id @default(uuid())
+  nama   String
+  email  String?
+  noTelp String
+  alamat String
+  transaksi Transaksi[]
+
+  @@map("pembeli")
+}
+
+model Sales {
+  id     String @id @default(uuid())
+  nama   String
+  email  String
+  noTelp String
+  alamat String
+  transaksi Transaksi[]
+
+  @@map("sales")
+}
+
+model Transaksi {
+  id           String            @id @default(uuid())
+  tanggal DateTime @default(now())
+  totalBayar Int
+  status Status
+  metodePembayaran String
+  keterangan String?
+
+  transaksiDetail TransaksiDetail?
+
+  produk Produk @relation(fields: [produkId], references: [id])
+  produkId String
+
+  pembeli Pembeli @relation(fields: [pembeliId], references: [id])
+  pembeliId String
+
+  sales Sales @relation(fields: [salesId], references: [id])
+  salesId String
+
+  @@map("transaksi")
+}
+
+enum Status {
+  BELUM
+  SUDAH
+  SEBAGIAN
+}
+
+model TransaksiDetail {
+  id          String    @id @default(uuid())
+  jumlahProduk  Int
+  hargaSatuan Int
+  subtotal  Int
+  transaksi Transaksi @relation(fields: [transaksiId], references: [id])
+  transaksiId String @unique
+
+  @@map("transaksiDetail")
+}
+
+model Purchasing {
+  id   String     @id @default(uuid())
+  noPo Int
+  tanggalPo DateTime @default(now())
+  hargaSatuan Int
+  jumlahProduk  Int
+  subtotal  Int
+
+  vendor Vendor @relation(fields: [vendorId], references: [id])
+  vendorId String
+
+  produk Produk @relation(fields: [produkId], references: [id])
+  produkId String
+
+  @@map("purchasing")
+}
